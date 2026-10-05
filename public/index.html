@@ -1,0 +1,1111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nimbus — cloud console (backend connected)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #10161c;
+        --panel: #161d25;
+        --panel-alt: #1c2530;
+        --border: #2a3540;
+        --text: #e4e9ee;
+        --text2: #8996a3;
+        --text3: #5c6773;
+        --compute: #4fd1ae;
+        --storage: #e08e5b;
+        --database: #9c8cf0;
+        --network: #5b9cf0;
+        --security: #ecb35b;
+        --monitoring: #6fc46f;
+        --backup: #e07ba8;
+        --danger: #e0685b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "IBM Plex Sans", system-ui, sans-serif;
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      .mono {
+        font-family: "IBM Plex Mono", monospace;
+      }
+      a {
+        color: inherit;
+      }
+      #app {
+        display: flex;
+        min-height: 100vh;
+      }
+      #sidebar {
+        width: 216px;
+        flex: 0 0 216px;
+        background: var(--panel);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        padding: 20px 0;
+      }
+      .brand {
+        padding: 0 20px 20px 20px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 12px;
+      }
+      .brand-mark {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .brand-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--compute);
+      }
+      .brand-name {
+        font-weight: 600;
+        font-size: 17px;
+        letter-spacing: 0.2px;
+      }
+      .brand-sub {
+        color: var(--text3);
+        font-size: 12px;
+        margin-top: 4px;
+      }
+      nav {
+        flex: 1;
+        padding: 8px 10px;
+      }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 10px;
+        border-radius: 6px;
+        color: var(--text2);
+        cursor: pointer;
+        font-size: 14px;
+        border: 1px solid transparent;
+      }
+      .nav-item:hover {
+        background: var(--panel-alt);
+        color: var(--text);
+      }
+      .nav-item.active {
+        background: var(--panel-alt);
+        color: var(--text);
+        border-color: var(--border);
+      }
+      .nav-swatch {
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        flex: 0 0 8px;
+      }
+      .sidebar-foot {
+        padding: 14px 20px 0 20px;
+        border-top: 1px solid var(--border);
+        margin-top: 10px;
+        color: var(--text3);
+        font-size: 12px;
+      }
+      #main {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      #topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 28px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg);
+      }
+      .topbar-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        color: var(--text2);
+        font-size: 13px;
+      }
+      .region-pill {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 5px 10px;
+        color: var(--text);
+        background: var(--panel);
+      }
+      .aws-pill {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 5px 10px;
+        font-size: 12.5px;
+      }
+      .aws-pill.on {
+        color: var(--monitoring);
+        border-color: var(--monitoring);
+      }
+      .aws-pill.off {
+        color: var(--text3);
+      }
+      .topbar-right {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        color: var(--text2);
+        font-size: 13px;
+      }
+      #content {
+        padding: 28px;
+        flex: 1;
+        overflow-x: hidden;
+      }
+      .view-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 22px;
+        gap: 20px;
+      }
+      .view-head h1 {
+        font-size: 22px;
+        margin: 0 0 6px 0;
+        font-weight: 600;
+      }
+      .view-head p {
+        margin: 0;
+        color: var(--text2);
+        font-size: 14px;
+        max-width: 520px;
+      }
+      .btn {
+        border: 1px solid var(--border);
+        background: var(--panel-alt);
+        color: var(--text);
+        padding: 9px 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .btn:hover {
+        border-color: var(--text3);
+      }
+      .btn-accent {
+        background: var(--accent, var(--compute));
+        color: #0b1210;
+        border-color: transparent;
+        font-weight: 500;
+      }
+      .btn-danger {
+        color: var(--danger);
+      }
+      .btn-sm {
+        padding: 5px 10px;
+        font-size: 12.5px;
+      }
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 14px;
+        margin-bottom: 26px;
+      }
+      .stat-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px 18px;
+      }
+      .stat-card .n {
+        font-size: 26px;
+        font-weight: 600;
+      }
+      .stat-card .l {
+        color: var(--text2);
+        font-size: 13px;
+        margin-top: 4px;
+      }
+      .stat-card .bar {
+        height: 3px;
+        border-radius: 2px;
+        margin-top: 12px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      thead th {
+        text-align: left;
+        font-weight: 500;
+        color: var(--text2);
+        font-size: 12.5px;
+        padding: 11px 14px;
+        border-bottom: 1px solid var(--border);
+        background: var(--panel-alt);
+      }
+      tbody td {
+        padding: 11px 14px;
+        border-bottom: 1px solid var(--border);
+        font-size: 14px;
+      }
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+      tbody tr:hover {
+        background: var(--panel-alt);
+      }
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+      }
+      .status .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+      }
+      .empty {
+        padding: 34px;
+        text-align: center;
+        color: var(--text3);
+        border: 1px dashed var(--border);
+        border-radius: 10px;
+      }
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 18px 20px;
+        margin-bottom: 20px;
+      }
+      .panel h3 {
+        margin: 0 0 14px 0;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .form-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        flex: 1;
+        min-width: 140px;
+      }
+      .field label {
+        font-size: 12.5px;
+        color: var(--text2);
+      }
+      .field input,
+      .field select {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        padding: 8px 10px;
+        font-size: 14px;
+        font-family: inherit;
+      }
+      .field input:focus,
+      .field select:focus {
+        outline: none;
+        border-color: var(--text3);
+      }
+      .modal-bg {
+        position: fixed;
+        inset: 0;
+        background: rgba(8, 11, 14, 0.6);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 20;
+      }
+      .modal-bg.active {
+        display: flex;
+      }
+      .modal {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 22px;
+        width: 380px;
+        max-width: 92vw;
+      }
+      .modal h3 {
+        margin: 0 0 4px 0;
+      }
+      .modal .sub {
+        color: var(--text2);
+        font-size: 13px;
+        margin-bottom: 16px;
+      }
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 18px;
+      }
+      .two-col {
+        display: grid;
+        grid-template-columns: 1.3fr 1fr;
+        gap: 18px;
+        align-items: start;
+      }
+      @media (max-width: 880px) {
+        .two-col {
+          grid-template-columns: 1fr;
+        }
+        #sidebar {
+          width: 64px;
+          flex-basis: 64px;
+        }
+        .brand-name,
+        .brand-sub,
+        .nav-item span.label {
+          display: none;
+        }
+        .nav-item {
+          justify-content: center;
+        }
+      }
+      .chip {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        border: 1px solid var(--border);
+        color: var(--text2);
+      }
+      #toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: var(--panel-alt);
+        border: 1px solid var(--border);
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 13.5px;
+        opacity: 0;
+        transform: translateY(8px);
+        transition: all 0.25s;
+        pointer-events: none;
+        z-index: 30;
+        max-width: 340px;
+      }
+      #toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .note {
+        color: var(--text3);
+        font-size: 12px;
+        margin-top: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="sidebar">
+        <div class="brand">
+          <div class="brand-mark">
+            <span class="brand-dot"></span
+            ><span class="brand-name">Nimbus</span>
+          </div>
+          <div class="brand-sub">Backend-connected console</div>
+        </div>
+        <nav id="navlist"></nav>
+        <div class="sidebar-foot">ap-south-1 &middot; live API</div>
+      </div>
+      <div id="main">
+        <div id="topbar">
+          <div class="topbar-left">
+            <div class="region-pill">Region: ap-south-1</div>
+            <span id="awsPill" class="aws-pill off">Checking AWS...</span>
+          </div>
+          <div class="topbar-right">
+            <span id="clock" class="mono"></span>
+          </div>
+        </div>
+        <div id="content">Loading platform state…</div>
+      </div>
+    </div>
+
+    <div class="modal-bg" id="confirmModal">
+      <div class="modal">
+        <h3 id="confirmTitle">Remove resource</h3>
+        <div class="sub" id="confirmSub">This can't be undone.</div>
+        <div class="modal-actions">
+          <button class="btn" onclick="closeConfirm()">Cancel</button>
+          <button class="btn btn-danger" id="confirmBtn">Remove</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+      /* ---------------------------------------------------------------
+   API layer — every mutation goes to the Express backend; state is
+   re-fetched from the server (the real source of truth) afterward.
+--------------------------------------------------------------- */
+      let state = {
+        compute: [],
+        storage: [],
+        database: [],
+        network: [],
+        users: [],
+        groups: [],
+        backups: [],
+        crossRegion: true,
+        log: [],
+        awsLive: false,
+      };
+
+      async function api(method, url, body) {
+        const res = await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: body ? JSON.stringify(body) : undefined,
+        });
+        if (!res.ok) {
+          let msg = "Request failed";
+          try {
+            msg = (await res.json()).error || msg;
+          } catch (e) {}
+          throw new Error(msg);
+        }
+        return res.status === 204 ? null : res.json();
+      }
+      async function refreshState() {
+        state = await api("GET", "/api/state");
+        document.getElementById("awsPill").textContent = state.awsLive
+          ? "Live AWS: connected"
+          : "Live AWS: not configured";
+        document.getElementById("awsPill").className =
+          "aws-pill " + (state.awsLive ? "on" : "off");
+      }
+      function toast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        clearTimeout(toast._h);
+        toast._h = setTimeout(() => t.classList.remove("show"), 2600);
+      }
+      async function run(action, successMsg, view) {
+        try {
+          await action();
+          await refreshState();
+          if (successMsg) toast(successMsg);
+          goTo(view);
+        } catch (err) {
+          toast("Error: " + err.message);
+        }
+      }
+
+      /* ---------------------------------------------------------------
+   Navigation
+--------------------------------------------------------------- */
+      const NAV = [
+        { id: "dashboard", label: "Dashboard", color: "var(--text2)" },
+        { id: "compute", label: "Compute", color: "var(--compute)" },
+        { id: "storage", label: "Storage", color: "var(--storage)" },
+        { id: "database", label: "Database", color: "var(--database)" },
+        { id: "network", label: "Networking", color: "var(--network)" },
+        { id: "security", label: "Security", color: "var(--security)" },
+        { id: "backup", label: "Backup & DR", color: "var(--backup)" },
+      ];
+      function renderNav(activeId) {
+        const nav = document.getElementById("navlist");
+        nav.innerHTML = NAV.map(
+          (n) => `
+    <div class="nav-item ${n.id === activeId ? "active" : ""}" data-view="${n.id}">
+      <span class="nav-swatch" style="background:${n.color}"></span>
+      <span class="label">${n.label}</span>
+    </div>`,
+        ).join("");
+        nav.querySelectorAll(".nav-item").forEach((el) => {
+          el.addEventListener("click", () => goTo(el.dataset.view));
+        });
+      }
+      function goTo(view) {
+        renderNav(view);
+        document.getElementById("content").innerHTML = VIEWS[view]();
+        attachViewHandlers();
+      }
+
+      /* ---------------------------------------------------------------
+   Shared bits
+--------------------------------------------------------------- */
+      function statusDot(status) {
+        const good = ["running", "available", "active"].includes(status);
+        const warn = ["stopped", "paused"].includes(status);
+        const color = good
+          ? "var(--monitoring)"
+          : warn
+            ? "var(--security)"
+            : "var(--danger)";
+        return `<span class="status"><span class="dot" style="background:${color}"></span>${status}</span>`;
+      }
+      function viewHead(title, sub, actionLabel, actionColor) {
+        return `<div class="view-head">
+    <div><h1>${title}</h1><p>${sub}</p></div>
+    ${actionLabel ? `<button class="btn btn-accent" id="primaryAction" style="--accent:${actionColor}">${actionLabel}</button>` : ""}
+  </div>`;
+      }
+      let pendingDelete = null;
+      function askDelete(title, sub, onConfirm) {
+        pendingDelete = onConfirm;
+        document.getElementById("confirmTitle").textContent = title;
+        document.getElementById("confirmSub").textContent = sub;
+        document.getElementById("confirmModal").classList.add("active");
+      }
+      function closeConfirm() {
+        document.getElementById("confirmModal").classList.remove("active");
+        pendingDelete = null;
+      }
+      document.getElementById("confirmBtn").addEventListener("click", () => {
+        if (pendingDelete) pendingDelete();
+        closeConfirm();
+      });
+      function hideCreate() {
+        const p = document.getElementById("createPanel");
+        if (p) p.style.display = "none";
+      }
+      function attachViewHandlers() {
+        const action = document.getElementById("primaryAction");
+        if (action) {
+          action.addEventListener("click", () => {
+            const p = document.getElementById("createPanel");
+            if (p)
+              p.style.display = p.style.display === "none" ? "block" : "none";
+          });
+        }
+      }
+
+      /* ---------------------------------------------------------------
+   Dashboard
+--------------------------------------------------------------- */
+      function dashboardView() {
+        const counts = [
+          {
+            label: "Compute instances",
+            n: state.compute.length,
+            color: "var(--compute)",
+          },
+          {
+            label: "Storage buckets",
+            n: state.storage.length,
+            color: "var(--storage)",
+          },
+          {
+            label: "Database instances",
+            n: state.database.length,
+            color: "var(--database)",
+          },
+          { label: "VPCs", n: state.network.length, color: "var(--network)" },
+          {
+            label: "IAM users",
+            n: state.users.length,
+            color: "var(--security)",
+          },
+          {
+            label: "Backups stored",
+            n: state.backups.length,
+            color: "var(--backup)",
+          },
+        ];
+        return `
+    ${viewHead("Platform overview", "A snapshot of every module, served live from the Express API.")}
+    <div class="card-grid">
+      ${counts
+        .map(
+          (c) => `
+        <div class="stat-card">
+          <div class="n">${c.n}</div>
+          <div class="l">${c.label}</div>
+          <div class="bar" style="background:${c.color}"></div>
+        </div>`,
+        )
+        .join("")}
+    </div>
+    <div class="two-col">
+      <div class="panel">
+        <h3>Recent activity</h3>
+        ${
+          state.log.length
+            ? `<table><tbody>
+          ${state.log.map((l) => `<tr><td class="mono" style="color:var(--text3);width:90px;">${l.t}</td><td>${l.msg}</td></tr>`).join("")}
+        </tbody></table>`
+            : `<div class="empty">No activity yet — create a resource in any module to see it logged here.</div>`
+        }
+      </div>
+      <div class="panel">
+        <h3>Module health</h3>
+        <table><tbody>
+          <tr><td>Compute</td><td>${statusDot(state.compute.some((i) => i.status === "running") ? "running" : state.compute.length ? "stopped" : "active")}</td></tr>
+          <tr><td>Database</td><td>${statusDot(state.database.length ? "available" : "stopped")}</td></tr>
+          <tr><td>Networking</td><td>${statusDot("active")}</td></tr>
+          <tr><td>Backup & DR</td><td>${statusDot(state.crossRegion ? "active" : "paused")}</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  `;
+      }
+
+      /* ---------------------------------------------------------------
+   Compute
+--------------------------------------------------------------- */
+      function computeView() {
+        return `
+    ${viewHead("Compute", "Virtual machines and containers running your workloads.", "Launch instance", "var(--compute)")}
+    <div class="panel" id="createPanel" style="display:none;">
+      <h3>Launch instance</h3>
+      <div class="form-row">
+        <div class="field"><label>Name</label><input id="c_name" placeholder="e.g. api-server-2"></div>
+        <div class="field"><label>Instance type</label>
+          <select id="c_type"><option>t3.micro</option><option>t3.medium</option><option>t3.large</option><option>m5.xlarge</option></select>
+        </div>
+        <div class="field"><label>Availability zone</label>
+          <select id="c_az"><option>ap-south-1a</option><option>ap-south-1b</option><option>ap-south-1c</option></select>
+        </div>
+      </div>
+      <button class="btn btn-accent" style="--accent:var(--compute)" onclick="createInstance()">Launch</button>
+      <button class="btn" onclick="hideCreate()">Cancel</button>
+    </div>
+    ${
+      state.compute.length
+        ? `
+    <table><thead><tr><th>Instance ID</th><th>Name</th><th>Type</th><th>AZ</th><th>Status</th><th></th></tr></thead>
+    <tbody>${state.compute
+      .map(
+        (i) => `
+      <tr>
+        <td class="mono">${i.id}</td><td>${i.name}</td><td>${i.itype}</td><td>${i.az}</td>
+        <td>${statusDot(i.status)}</td>
+        <td style="text-align:right;">
+          <button class="btn btn-sm" onclick="toggleInstance('${i.id}')">${i.status === "running" ? "Stop" : "Start"}</button>
+          <button class="btn btn-sm btn-danger" onclick="removeInstance('${i.id}')">Terminate</button>
+        </td>
+      </tr>`,
+      )
+      .join("")}</tbody></table>`
+        : `<div class="empty">No instances yet. Launch one to see it here.</div>`
+    }
+  `;
+      }
+      function createInstance() {
+        const name =
+          document.getElementById("c_name").value.trim() || "instance";
+        const itype = document.getElementById("c_type").value;
+        const az = document.getElementById("c_az").value;
+        run(
+          () => api("POST", "/api/compute", { name, itype, az }),
+          "Instance launched",
+          "compute",
+        );
+      }
+      function toggleInstance(id) {
+        run(() => api("PATCH", `/api/compute/${id}/toggle`), null, "compute");
+      }
+      function removeInstance(id) {
+        askDelete(
+          "Terminate instance?",
+          `${id} will be permanently removed.`,
+          () => {
+            run(
+              () => api("DELETE", `/api/compute/${id}`),
+              "Instance terminated",
+              "compute",
+            );
+          },
+        );
+      }
+
+      /* ---------------------------------------------------------------
+   Storage
+--------------------------------------------------------------- */
+      function storageView() {
+        return `
+    ${viewHead("Storage", "Object, block and file storage for platform data.", "Create bucket", "var(--storage)")}
+    <div class="panel" id="createPanel" style="display:none;">
+      <h3>Create bucket</h3>
+      <div class="form-row">
+        <div class="field"><label>Bucket name</label><input id="s_name" placeholder="e.g. invoice-archive"></div>
+        <div class="field"><label>Type</label>
+          <select id="s_kind"><option>Object (S3-style)</option><option>Block volume</option><option>Shared file system</option></select>
+        </div>
+        <div class="field"><label>Size (GB)</label><input id="s_size" type="number" value="50" min="1"></div>
+      </div>
+      <div class="note">${state.awsLive ? 'AWS is connected — "Object (S3-style)" buckets are created for real in your S3 account.' : "AWS isn't configured on this server — buckets will be simulated in the database. Add credentials to .env to make this real."}</div>
+      <br/>
+      <button class="btn btn-accent" style="--accent:var(--storage)" onclick="createBucket()">Create</button>
+      <button class="btn" onclick="hideCreate()">Cancel</button>
+    </div>
+    ${
+      state.storage.length
+        ? `
+    <table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Size</th><th>Region</th><th>Source</th><th></th></tr></thead>
+    <tbody>${state.storage
+      .map(
+        (s) => `
+      <tr>
+        <td class="mono">${s.bucketName || s.id}</td><td>${s.name}</td><td>${s.kind}</td><td>${s.sizeGB} GB</td><td>${s.region}</td>
+        <td>${s.live ? '<span class="chip" style="color:var(--monitoring);border-color:var(--monitoring);">real S3</span>' : '<span class="chip">simulated</span>'}</td>
+        <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeStorage('${s.id}')">Delete</button></td>
+      </tr>`,
+      )
+      .join("")}</tbody></table>`
+        : `<div class="empty">No storage resources yet.</div>`
+    }
+  `;
+      }
+      function createBucket() {
+        const name = document.getElementById("s_name").value.trim() || "bucket";
+        const kind = document.getElementById("s_kind").value;
+        const sizeGB = Number(document.getElementById("s_size").value) || 10;
+        run(
+          () => api("POST", "/api/storage", { name, kind, sizeGB }),
+          "Bucket created",
+          "storage",
+        );
+      }
+      function removeStorage(id) {
+        askDelete(
+          "Delete storage resource?",
+          `${id} and its contents will be permanently removed.`,
+          () => {
+            run(
+              () => api("DELETE", `/api/storage/${id}`),
+              "Deleted",
+              "storage",
+            );
+          },
+        );
+      }
+
+      /* ---------------------------------------------------------------
+   Database
+--------------------------------------------------------------- */
+      function databaseView() {
+        return `
+    ${viewHead("Database", "Managed relational and NoSQL instances.", "Create database", "var(--database)")}
+    <div class="panel" id="createPanel" style="display:none;">
+      <h3>Create database</h3>
+      <div class="form-row">
+        <div class="field"><label>Name</label><input id="d_name" placeholder="e.g. analytics"></div>
+        <div class="field"><label>Engine</label>
+          <select id="d_engine"><option>PostgreSQL</option><option>MySQL</option><option>DynamoDB (NoSQL)</option><option>Redis (cache)</option></select>
+        </div>
+        <div class="field"><label>Multi-AZ</label>
+          <select id="d_maz"><option value="true">Enabled</option><option value="false">Disabled</option></select>
+        </div>
+      </div>
+      <button class="btn btn-accent" style="--accent:var(--database)" onclick="createDb()">Create</button>
+      <button class="btn" onclick="hideCreate()">Cancel</button>
+    </div>
+    ${
+      state.database.length
+        ? `
+    <table><thead><tr><th>ID</th><th>Name</th><th>Engine</th><th>Multi-AZ</th><th>Status</th><th></th></tr></thead>
+    <tbody>${state.database
+      .map(
+        (d) => `
+      <tr>
+        <td class="mono">${d.id}</td><td>${d.name}</td><td>${d.engine}</td>
+        <td>${d.multiAZ ? '<span class="chip">enabled</span>' : '<span class="chip">disabled</span>'}</td>
+        <td>${statusDot(d.status)}</td>
+        <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeDb('${d.id}')">Delete</button></td>
+      </tr>`,
+      )
+      .join("")}</tbody></table>`
+        : `<div class="empty">No database instances yet.</div>`
+    }
+  `;
+      }
+      function createDb() {
+        const name =
+          document.getElementById("d_name").value.trim() || "database";
+        const engine = document.getElementById("d_engine").value;
+        const multiAZ = document.getElementById("d_maz").value === "true";
+        run(
+          () => api("POST", "/api/database", { name, engine, multiAZ }),
+          "Database created",
+          "database",
+        );
+      }
+      function removeDb(id) {
+        askDelete(
+          "Delete database?",
+          `${id} will be permanently removed. Consider taking a snapshot first.`,
+          () => {
+            run(
+              () => api("DELETE", `/api/database/${id}`),
+              "Deleted",
+              "database",
+            );
+          },
+        );
+      }
+
+      /* ---------------------------------------------------------------
+   Networking
+--------------------------------------------------------------- */
+      function networkView() {
+        return `
+    ${viewHead("Networking", "Virtual networks, subnets and traffic routing.", "Create VPC", "var(--network)")}
+    <div class="panel" id="createPanel" style="display:none;">
+      <h3>Create VPC</h3>
+      <div class="form-row">
+        <div class="field"><label>Name</label><input id="n_name" placeholder="e.g. staging-vpc"></div>
+        <div class="field"><label>CIDR block</label><input id="n_cidr" placeholder="10.30.0.0/16" value="10.30.0.0/16"></div>
+        <div class="field"><label>Subnets</label><input id="n_subnets" type="number" value="2" min="1" max="12"></div>
+      </div>
+      <button class="btn btn-accent" style="--accent:var(--network)" onclick="createVpc()">Create</button>
+      <button class="btn" onclick="hideCreate()">Cancel</button>
+    </div>
+    ${
+      state.network.length
+        ? `
+    <table><thead><tr><th>ID</th><th>Name</th><th>CIDR</th><th>Subnets</th><th></th></tr></thead>
+    <tbody>${state.network
+      .map(
+        (v) => `
+      <tr>
+        <td class="mono">${v.id}</td><td>${v.name}</td><td class="mono">${v.cidr}</td><td>${v.subnets}</td>
+        <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeVpc('${v.id}')">Delete</button></td>
+      </tr>`,
+      )
+      .join("")}</tbody></table>`
+        : `<div class="empty">No VPCs yet.</div>`
+    }
+  `;
+      }
+      function createVpc() {
+        const name = document.getElementById("n_name").value.trim() || "vpc";
+        const cidr =
+          document.getElementById("n_cidr").value.trim() || "10.0.0.0/16";
+        const subnets = Number(document.getElementById("n_subnets").value) || 2;
+        run(
+          () => api("POST", "/api/network", { name, cidr, subnets }),
+          "VPC created",
+          "network",
+        );
+      }
+      function removeVpc(id) {
+        askDelete(
+          "Delete VPC?",
+          `${id} and its subnets will be permanently removed.`,
+          () => {
+            run(
+              () => api("DELETE", `/api/network/${id}`),
+              "Deleted",
+              "network",
+            );
+          },
+        );
+      }
+
+      /* ---------------------------------------------------------------
+   Security
+--------------------------------------------------------------- */
+      function securityView() {
+        return `
+    ${viewHead("Security", "Identity, access policies and network security groups.", "Add user", "var(--security)")}
+    <div class="panel" id="createPanel" style="display:none;">
+      <h3>Add IAM user</h3>
+      <div class="form-row">
+        <div class="field"><label>Name</label><input id="u_name" placeholder="e.g. data-team"></div>
+        <div class="field"><label>Role</label>
+          <select id="u_role"><option>Administrator</option><option>Developer</option><option>Read-only</option><option>Billing</option></select>
+        </div>
+      </div>
+      <button class="btn btn-accent" style="--accent:var(--security)" onclick="createUser()">Add user</button>
+      <button class="btn" onclick="hideCreate()">Cancel</button>
+    </div>
+    <div class="two-col">
+      <div class="panel">
+        <h3>IAM users</h3>
+        ${
+          state.users.length
+            ? `<table><thead><tr><th>ID</th><th>Name</th><th>Role</th><th></th></tr></thead>
+        <tbody>${state.users
+          .map(
+            (u) => `
+          <tr><td class="mono">${u.id}</td><td>${u.name}</td><td><span class="chip">${u.role}</span></td>
+          <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeUser('${u.id}')">Remove</button></td></tr>`,
+          )
+          .join("")}
+        </tbody></table>`
+            : `<div class="empty">No users yet.</div>`
+        }
+      </div>
+      <div class="panel">
+        <h3>Security groups</h3>
+        ${
+          state.groups.length
+            ? `<table><thead><tr><th>Name</th><th>Rule</th></tr></thead>
+        <tbody>${state.groups.map((g) => `<tr><td>${g.name}</td><td class="mono" style="color:var(--text2);">${g.rule}</td></tr>`).join("")}</tbody></table>`
+            : `<div class="empty">No security groups yet.</div>`
+        }
+      </div>
+    </div>
+  `;
+      }
+      function createUser() {
+        const name = document.getElementById("u_name").value.trim() || "user";
+        const role = document.getElementById("u_role").value;
+        run(
+          () => api("POST", "/api/security/users", { name, role }),
+          "User added",
+          "security",
+        );
+      }
+      function removeUser(id) {
+        askDelete("Remove user?", `${id} will lose access immediately.`, () => {
+          run(
+            () => api("DELETE", `/api/security/users/${id}`),
+            "Removed",
+            "security",
+          );
+        });
+      }
+
+      /* ---------------------------------------------------------------
+   Backup & DR
+--------------------------------------------------------------- */
+      function backupView() {
+        const sources = [
+          ...state.compute.map((i) => ({
+            id: i.id,
+            label: `${i.name} (compute)`,
+          })),
+          ...state.database.map((d) => ({
+            id: d.id,
+            label: `${d.name} (database)`,
+          })),
+          ...state.storage.map((s) => ({
+            id: s.id,
+            label: `${s.name} (storage)`,
+          })),
+        ];
+        return `
+    ${viewHead("Backup & disaster recovery", "Snapshots and cross-region replication for platform data.", "Take snapshot", "var(--backup)")}
+    <div class="panel" id="createPanel" style="display:none;">
+      <h3>Take snapshot</h3>
+      <div class="form-row">
+        <div class="field" style="flex:2;"><label>Source resource</label>
+          <select id="b_source">${sources.length ? sources.map((s) => `<option value="${s.id}|${s.label}">${s.label}</option>`).join("") : "<option disabled>No resources available</option>"}</select>
+        </div>
+      </div>
+      <button class="btn btn-accent" style="--accent:var(--backup)" onclick="createSnapshot()" ${sources.length ? "" : "disabled"}>Take snapshot</button>
+      <button class="btn" onclick="hideCreate()">Cancel</button>
+    </div>
+    <div class="panel" style="display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <h3 style="margin-bottom:2px;">Cross-region replication</h3>
+        <div style="color:var(--text2);font-size:13px;">Replicate new snapshots to a second AWS region for disaster recovery.</div>
+      </div>
+      <button class="btn ${state.crossRegion ? "btn-accent" : ""}" style="--accent:var(--backup)" onclick="toggleCrossRegion()">${state.crossRegion ? "Enabled" : "Disabled"}</button>
+    </div>
+    ${
+      state.backups.length
+        ? `
+    <table><thead><tr><th>Snapshot ID</th><th>Source</th><th>Created</th><th>Replicated</th><th></th></tr></thead>
+    <tbody>${state.backups
+      .map(
+        (b) => `
+      <tr>
+        <td class="mono">${b.id}</td><td>${b.sourceLabel}</td><td>${b.createdAt}</td>
+        <td>${b.crossRegion ? '<span class="chip">cross-region</span>' : '<span class="chip">single-region</span>'}</td>
+        <td style="text-align:right;"><button class="btn btn-sm btn-danger" onclick="removeSnapshot('${b.id}')">Delete</button></td>
+      </tr>`,
+      )
+      .join("")}</tbody></table>`
+        : `<div class="empty">No snapshots yet. Take one from an existing resource.</div>`
+    }
+  `;
+      }
+      function createSnapshot() {
+        const sel = document.getElementById("b_source").value;
+        if (!sel) return;
+        const [sourceId, sourceLabel] = sel.split("|");
+        run(
+          () => api("POST", "/api/backups", { sourceId, sourceLabel }),
+          "Snapshot created",
+          "backup",
+        );
+      }
+      function removeSnapshot(id) {
+        askDelete(
+          "Delete snapshot?",
+          `${id} will be permanently removed.`,
+          () => {
+            run(() => api("DELETE", `/api/backups/${id}`), "Deleted", "backup");
+          },
+        );
+      }
+      function toggleCrossRegion() {
+        run(
+          () => api("PATCH", "/api/backups/cross-region/toggle"),
+          null,
+          "backup",
+        );
+      }
+
+      const VIEWS = {
+        dashboard: dashboardView,
+        compute: computeView,
+        storage: storageView,
+        database: databaseView,
+        network: networkView,
+        security: securityView,
+        backup: backupView,
+      };
+
+      /* ---------------------------------------------------------------
+   Boot
+--------------------------------------------------------------- */
+      function tickClock() {
+        document.getElementById("clock").textContent =
+          new Date().toLocaleTimeString();
+      }
+      setInterval(tickClock, 1000);
+      tickClock();
+
+      (async function boot() {
+        try {
+          await refreshState();
+          goTo("dashboard");
+        } catch (err) {
+          document.getElementById("content").innerHTML =
+            `<div class="empty">Couldn't reach the backend API. Make sure the server is running (npm start) and refresh this page.</div>`;
+        }
+      })();
+    </script>
+  </body>
+</html>
