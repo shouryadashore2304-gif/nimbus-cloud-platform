@@ -503,12 +503,22 @@
       }
       async function refreshState() {
         state = await api("GET", "/api/state");
+
+        // Get real AWS RDS database data
+        try {
+          state.database = await api("GET", "/api/database");
+        } catch (error) {
+          console.error("RDS fetch failed:", error);
+        }
+
         document.getElementById("awsPill").textContent = state.awsLive
           ? "Live AWS: connected"
           : "Live AWS: not configured";
+
         document.getElementById("awsPill").className =
           "aws-pill " + (state.awsLive ? "on" : "off");
       }
+
       function toast(msg) {
         const t = document.getElementById("toast");
         t.textContent = msg;
