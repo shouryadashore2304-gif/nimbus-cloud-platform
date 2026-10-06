@@ -503,7 +503,7 @@
       }
       async function refreshState() {
         state = await api("GET", "/api/state");
-
+        state.compute = await api("GET", "/api/compute");
         // Get real AWS RDS database data
         try {
           state.database = await api("GET", "/api/database");
