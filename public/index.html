@@ -12,22 +12,97 @@
     />
     <style>
       :root {
-        --bg: #10161c;
-        --panel: #161d25;
-        --panel-alt: #1c2530;
-        --border: #2a3540;
-        --text: #e4e9ee;
-        --text2: #8996a3;
-        --text3: #5c6773;
-        --compute: #4fd1ae;
-        --storage: #e08e5b;
-        --database: #9c8cf0;
-        --network: #5b9cf0;
-        --security: #ecb35b;
-        --monitoring: #6fc46f;
-        --backup: #e07ba8;
-        --danger: #e0685b;
-      }
+          --bg: #0b1120;
+          --panel: #111827;
+          --panel-alt: #182235;
+          --border: #263449;
+
+          --text: #f1f5f9;
+          --text2: #94a3b8;
+          --text3: #64748b;
+
+          --compute: #22c55e;
+          --storage: #f59e0b;
+          --database: #a78bfa;
+          --network: #38bdf8;
+          --security: #fbbf24;
+          --monitoring: #34d399;
+          --backup: #f472b6;
+          --danger: #ef4444;
+
+          --accent: #6366f1;
+          --accent-hover: #818cf8;
+        }
+
+        body {
+  background:
+    radial-gradient(circle at 80% 0%, rgba(99,102,241,0.08), transparent 30%),
+    var(--bg);
+}
+
+#sidebar {
+  background: rgba(17, 24, 39, 0.95);
+  box-shadow: 8px 0 30px rgba(0,0,0,0.15);
+}
+
+#topbar {
+  background: rgba(11,17,32,0.92);
+  backdrop-filter: blur(10px);
+}
+
+.nav-item {
+  transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+  background: #1e293b;
+  transform: translateX(2px);
+}
+
+.nav-item.active {
+  background: linear-gradient(
+    90deg,
+    rgba(99,102,241,0.18),
+    rgba(99,102,241,0.05)
+  );
+  border-color: rgba(99,102,241,0.35);
+}
+
+.btn {
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn-accent {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.btn-accent:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.aws-pill.on {
+  background: rgba(52,211,153,0.08);
+  box-shadow: 0 0 12px rgba(52,211,153,0.12);
+}
+
+.region-pill {
+  background: rgba(255,255,255,0.025);
+}
+
+.card,
+.panel,
+.table-wrap {
+  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+        
       * {
         box-sizing: border-box;
       }
